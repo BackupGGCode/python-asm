@@ -1,3 +1,5 @@
+# Copyright 2008 Anton Mellit
+
 from utils import bits_to_bin
 
 class Instruction:

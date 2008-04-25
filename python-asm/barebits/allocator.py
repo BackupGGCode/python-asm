@@ -1,3 +1,5 @@
+# Copyright 2008 Anton Mellit
+
 import context
 
 class StaticAllocator(context.State):

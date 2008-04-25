@@ -1,3 +1,5 @@
+# Copyright 2008 Anton Mellit
+
 from context import get_context, State
 
 class CodeMaker(State):

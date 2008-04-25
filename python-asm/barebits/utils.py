@@ -1,4 +1,4 @@
-
+# Copyright 2008 Anton Mellit
 
 def bits_to_bin(str):
     res = 0

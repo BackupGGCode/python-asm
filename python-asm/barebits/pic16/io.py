@@ -1,3 +1,5 @@
+# Copyright 2008 Anton Mellit
+
 from registers import *
 
 TMR = [

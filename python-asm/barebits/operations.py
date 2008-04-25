@@ -1,3 +1,4 @@
+# Copyright 2008 Anton Mellit
 
 def _op_stub(name):
     def f(*args):
