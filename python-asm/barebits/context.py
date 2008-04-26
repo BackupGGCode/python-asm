@@ -40,9 +40,6 @@ _context.manager = contextlib.nested
 def get_context():
     return _context
 
-def install_manager(manager):
-    old_manager = _context.manager
-    def new_manager():
-        return contextlib.nested(old_manager(), manager)
-    _context.manager = new_manager
-    
+def manage(*attr_names):
+    res = [StateManager(name) for name in attr_names]
+    return contextlib.nested(*res)

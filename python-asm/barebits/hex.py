@@ -1,8 +1,11 @@
 # Copyright 2008 Anton Mellit
 
-import cpu
+""" Functions to transform code to HEX format """
 
-hex = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
+from barebits.pic16.instructions import standard
+
+hex = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 
+        'd', 'e', 'f']
 
 def wordsToBytes(words):
     for w in words:
@@ -37,9 +40,12 @@ def hex_line(address, type, data):
     return s
 
 def gen_hex(output, offset):
+    """ Stores the program at given offset and returns a sequence of 
+    lines in HEX format """
+    
     yield hex_line(0, 4, [0, 0])
     
-    goto = wordsToBytes(cpu.cpu.standard['GOTO'].write(offset>>1))
+    goto = wordsToBytes(standard['GOTO'].write(offset>>1))
     yield hex_line(0, 0, list(goto))
     
     bytes = list(wordsToBytes(output))

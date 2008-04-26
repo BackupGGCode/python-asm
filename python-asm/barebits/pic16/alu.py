@@ -1,11 +1,10 @@
 # Copyright 2008 Anton Mellit
 
-import registers
-import operations
-
-from context import get_context, State
-from allocator import alloc, free
-from code import do
+from barebits.pic16.registers import WREG, STATUS
+from barebits import operations
+from barebits.context import get_context, State
+from barebits.allocator import alloc, free
+from barebits.code import do
 
 
 def _make_alu_proxy(name):
@@ -56,18 +55,20 @@ def var(value = None):
         v <<= value
     return v
 
-_wreg = registers.WREG.phys
+_wreg = WREG
 
 _instr_wreg_reg = {'+': 'ADDWF', '&': 'ANDWF', '|': 'IORWF', '^': 'XORWF'}
 _instr_reg_wreg = dict(_instr_wreg_reg)
 _instr_wreg_reg['-'] = 'SUBFWB'
 _instr_reg_wreg['-'] = 'SUBWF'
-_instr_lit_wreg = {'+': 'ADDLW', '&': 'ANDLW', '|': 'IORLW', '^': 'XORLW', '-': 'SUBLW'}
+_instr_lit_wreg = {'+': 'ADDLW', '&': 'ANDLW', '|': 'IORLW', '^': 'XORLW', 
+                    '-': 'SUBLW'}
 
-conditions = {'zero': 0, 'not zero': 1, 'carry': 2, 'not carry': 3, 'overflow': 4, 
-                'not overflow': 5, 'negative': 6, 'not negative': 7}
+conditions = {'zero': 0, 'not zero': 1, 'carry': 2, 'not carry': 3, 
+        'overflow': 4, 'not overflow': 5, 'negative': 6, 'not negative': 7}
 
-_comp_flip = {'<': '>', '<=': '>=', '==': '==', '<>': '<>', '>': '<', '>=': '<='}
+_comp_flip = {'<': '>', '<=': '>=', '==': '==', '<>': '<>', '>': '<', 
+                '>=': '<='}
 
 class StatusAddress:
     pass
@@ -142,7 +143,7 @@ class ALU:
         
             if src1 == _wreg:
                 if name=='-':
-                    do('BSF', 0, registers.STATUS.phys)				
+                    do('BSF', STATUS, STATUS.C.ind)
                 do(_instr_wreg_reg[name], src, to_source)
             else:
                 do(_instr_reg_wreg[name], src, to_source)
@@ -198,13 +199,13 @@ class ALU:
             self._copy(target, _wreg)
 
     def set_bit(self, var, n):
-        do('BSF', n, var.address)
+        do('BSF', var.address, n)
         
     def clear_bit(self, var, n):
-        do('BCF', n, var.address)
+        do('BCF', var.address, n)
 
     def toggle_bit(self, var, n):
-        do('BTG', n, var.address)
+        do('BTG', var.address, n)
         
     def compute_bool(self, expr):
         if expr.opname in operations.comp_ops:
@@ -238,4 +239,3 @@ class ALU:
     def _compare_lit_wreg(self, target, name, lit):
         do('SUBLW', lit) # lit - wreg
         self._compare(target, name)
-    

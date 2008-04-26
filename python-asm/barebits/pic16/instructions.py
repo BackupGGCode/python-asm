@@ -1,28 +1,26 @@
 # Copyright 2008 Anton Mellit
 
-from utils import bits_to_bin
+""" Instruction set of pic18fxxxx microcontrollers """
 
-class Instruction:
-    '''An instruction may have parameters'''
-    
-    def __init__(self, name, length, opcode, nbits):
-        opcode = opcode.replace(' ', '')
-        self.name = name
-        self.length = length
-        self.opcode = bits_to_bin(opcode)
-        self.nbits = nbits
-        assert (len(opcode)==nbits)
-    
-    def write(self, *params):
-        assert False # abstract
-        
-        
+from barebits.utils import bits_to_bin, list_to_dict
+
 class Designator:
+    """Address of a register
+
+    We have two addressing modes. The address field always contains the
+    lowest byte of address (accessible addresses are 0x000-0xfff).
+
+    ACCESS mode is used to access special registers 0xf60-0xfff and
+    general purpose registers at 0x000-0x059.
+
+    In BSR mode the highest four bits of address are contained
+    in special register BSR.
     
+    """
     def __init__(self, address, use_bsr):
         self.address = address
         self.use_bsr = use_bsr
-        assert address>=0 and address<=255
+        assert address>=0 and address<=0xff
         
     def encode(self):
         return (self.use_bsr<<8) | self.address
@@ -36,8 +34,36 @@ class Designator:
         return  res
     
 
+class Instruction:
+    """ An instruction may have parameters.
+
+    name -- human-readable name
+    length -- length of the instruction in bytes
+    opcode -- the first bits which are fixed (given as a string of '0'
+    and '1', but converted to int)
+    nbits -- the number of fixed bits
+
+    Each subclass of Instruction implements method write with
+    particular parameters
+
+    """
+    def __init__(self, name, length, opcode, nbits):
+        opcode = opcode.replace(' ', '')
+        self.name = name
+        self.length = length
+        self.opcode = bits_to_bin(opcode)
+        self.nbits = nbits
+        assert (len(opcode)==nbits)
+
+    """ Generator which encodes instruction and returnes instances of
+    class Word """
+    def write(self, *params):
+        assert False # abstract
+        
+        
 class Word:
     def __init__(self, word):
+        assert word>=0 and word<=0xffff
         self.word = word
 
 
@@ -118,7 +144,7 @@ class BitInstr(Instruction):
     def __init__(self, name, opcode):
         Instruction.__init__(self, name, 2, opcode, 16-9-3)
         
-    def write(self, nbit, designator):
+    def write(self, designator, nbit):
         yield bitInstrCode(self.opcode, designator, nbit)
     
 
@@ -167,7 +193,8 @@ class MoveIndInstr(Instruction):
 
 NOPcode = 0xf
 
-standardInstructionSet = [
+""" Standard instruction set """
+standard = list_to_dict([
     SimpleInstr('NOP', 				'0000 0000 0000 0000'),
     SimpleInstr('SLEEP', 			'0000 0000 0000 0011'),
     SimpleInstr('CLRWDT', 			'0000 0000 0000 0100'),
@@ -247,9 +274,10 @@ standardInstructionSet = [
     LongJumpInstr('GOTO', 			'1110 1111'),
     LongFSRInstr('LFSR', 				'1110 1110 00'),
     ArgInstr('NOP1',				'1111', 12),
-]
+])
 
-extendedInstructionSet = [
+""" Extended instruction set (enabled if XINST configuration bit is set) """
+extended = list_to_dict([
     SimpleInstr('CALLW', 			'0000 0000 0001 0100'),
     FSRInstr('ADDFSR', 				'1110 1000'),
     FSRInstr('SUBFSR', 				'1110 1001'),
@@ -258,4 +286,5 @@ extendedInstructionSet = [
     ArgInstr('PUSHL',				'1110 1010', 8),
     MoveIndInstr('MOVSF',			'1110 1011 0'),
     MoveIndInstr('MOVSS',			'1110 1011 1'),
-]
+])
+extended.update(standard)
